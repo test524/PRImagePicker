@@ -21,7 +21,7 @@ class ViewController: UIViewController , PRAlbumListVCDelegate
         self.view.backgroundColor = .white
     }
 
-    //MARK:- Presenting the Custom image picker
+    //MARK:- Custom image picker
     @IBAction func btnActionForSelectFiles(_ sender: UIButton)
     {
         let albumListVC = PRAlbumListVC()
@@ -30,6 +30,7 @@ class ViewController: UIViewController , PRAlbumListVCDelegate
         albumListVC.maxFileSelection = 4
         albumListVC.fileType = .image
         albumListVC.fileSeletionType = .multiple
+        //albumListVC.maxFileSelectionMessage = "Test"
         self.present(navVC, animated: true, completion: nil)
     }
     

@@ -14,14 +14,6 @@
 import UIKit
 import Photos
 
-/*extension PRAlbumListVCDelegate where Self : UIViewController {
- 
- func didTapCloseButton()
- {
- 
- }
- }*/
-
 enum Section: Int
 {
     case allPhotos = 0
@@ -56,6 +48,7 @@ protocol PRAlbumListVCDelegate
     func selectedFiles(mediaFiles:[Files])
 }
 
+//MARK:- PRAlbumListVC 
 class PRAlbumListVC: UITableViewController
 {
     static let screenSize = UIScreen.main.bounds.size
@@ -64,11 +57,12 @@ class PRAlbumListVC: UITableViewController
     private var allPhotos: PHFetchResult<PHAsset>!
     private var smartAlbums:PHFetchResult<PHAssetCollection>!
     private var userCollections: PHFetchResult<PHCollection>!
-    var maxFileSelection:Int = 4
-    var fileType:mediaTypes?
-    var fileSeletionType:selectionType?
+    var maxFileSelection:Int = 1
+    var fileType:mediaTypes = .imageAndVideo
+    var fileSeletionType:selectionType = .single
     var delegate:PRAlbumListVCDelegate?
     var smartAlbumsStrings:[PHAssetCollectionSubtype]!
+    var maxFileSelectionMessage = "Max file seletion reached."
     
     let sectionLocalizedTitles = ["",NSLocalizedString("Smart Albums", comment: ""), NSLocalizedString("Albums", comment: "")]
 
@@ -99,7 +93,8 @@ class PRAlbumListVC: UITableViewController
         
         tableView.separatorStyle = .none
         fetchAllAlbumsCount()
-    
+        requestAlbumFileAccess()
+
     }
     
     override func viewWillAppear(_ animated: Bool)
@@ -110,7 +105,6 @@ class PRAlbumListVC: UITableViewController
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(true)
-        requestAlbumFileAccess()
     }
     
     func openSettings()
@@ -166,7 +160,7 @@ class PRAlbumListVC: UITableViewController
         })
     }
     
-    //MARK:- Smart albums
+    //MARK: Smart albums
     func fetchAllAlbumsCount()
     {
         
@@ -186,7 +180,7 @@ class PRAlbumListVC: UITableViewController
         PHPhotoLibrary.shared().register(self)
     }
     
-    //MARK:- FolderIdentifiers for album types
+    //MARK: FolderIdentifiers for album types
     func getFolderIdentifiers(subTypes:[PHAssetCollectionSubtype]) -> [String]
     {
         var folderNames = [String]()
@@ -201,7 +195,7 @@ class PRAlbumListVC: UITableViewController
         return folderNames
     }
     
-    //MARK:- Nav bar actions
+    //MARK: Nav bar actions
     @objc func dismissVC()
     {
         KFilePHAssetSelectionArray.removeAll()
@@ -218,46 +212,7 @@ class PRAlbumListVC: UITableViewController
         }
     }
     
-    deinit
-    {
-        PHPhotoLibrary.shared().unregisterChangeObserver(self)
-    }
-    
-    let flowLayout:UICollectionViewFlowLayout = {
-        let layout = UICollectionViewFlowLayout()
-        let noOfCells = isiPad ? 5 : 4
-        let cellWidth =  ((screenSize.width-(CGFloat(noOfCells-1)))/CGFloat(noOfCells))
-        let cellHeight =  screenSize.width/CGFloat(noOfCells)
-        layout.itemSize = CGSize.init(width: cellWidth, height: cellHeight)
-        layout.minimumLineSpacing = 0
-        layout.minimumInteritemSpacing = 0
-        return layout
-    }()
-    
-    let fetchOptions:PHFetchOptions = {
-        let allPhotosOptions = PHFetchOptions()
-        //allPhotosOptions.includeAssetSourceTypes = .typeUserLibrary
-        allPhotosOptions.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: false)]
-        return allPhotosOptions
-     }()
-    
-    let paragraphStyle:NSMutableParagraphStyle = {
-        let style = NSMutableParagraphStyle()
-        return style
-    }()
-    
-}
-
-
-struct Files
-{
-    var  image:UIImage!
-    var  videoThumbNailImage:UIImage!
-    var  videoURl:URL!
-}
-
-extension UIViewController
-{
+    //MARK: Final image selection
     func selectFiles(completion: @escaping (Bool) -> Void)
     {
         var images = [UIImage]()
@@ -268,7 +223,7 @@ extension UIViewController
             let requestImageOption = PHImageRequestOptions()
             requestImageOption.deliveryMode = PHImageRequestOptionsDeliveryMode.highQualityFormat
             requestImageOption.isSynchronous = true
-
+            
             //Image and Video thumbnail
             if asset.mediaType == .image
             {
@@ -311,12 +266,56 @@ extension UIViewController
                     }
                 }
                 //
-
+                
             }
             
         }
     }
     
+    deinit
+    {
+        PHPhotoLibrary.shared().unregisterChangeObserver(self)
+    }
+    
+    let flowLayout:UICollectionViewFlowLayout = {
+        let layout = UICollectionViewFlowLayout()
+        let noOfCells = isiPad ? 5 : 4
+        let cellWidth =  ((screenSize.width-(CGFloat(noOfCells-1)))/CGFloat(noOfCells))
+        let cellHeight =  screenSize.width/CGFloat(noOfCells)
+        layout.itemSize = CGSize.init(width: cellWidth, height: cellHeight)
+        layout.minimumLineSpacing = 1
+        layout.minimumInteritemSpacing = 1
+        return layout
+    }()
+    
+    let flowLayoutForPanoramas:UICollectionViewFlowLayout = {
+        let layout = UICollectionViewFlowLayout()
+        let noOfCells = 1
+        let cellWidth = screenSize.width
+        let cellHeight = screenSize.height/8
+        layout.itemSize = CGSize.init(width: cellWidth, height: cellHeight)
+        layout.minimumLineSpacing = 5
+        layout.minimumInteritemSpacing = 0
+        return layout
+    }()
+    
+    let fetchOptions:PHFetchOptions = {
+        let allPhotosOptions = PHFetchOptions()
+        //allPhotosOptions.includeAssetSourceTypes = .typeUserLibrary
+        allPhotosOptions.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: false)]
+        return allPhotosOptions
+     }()
+    
+    let paragraphStyle:NSMutableParagraphStyle = {
+        let style = NSMutableParagraphStyle()
+        return style
+    }()
+    
+}
+
+
+extension UIViewController
+{
     //Toobar display
     func makeToolBar()
     {
@@ -350,7 +349,7 @@ extension UIViewController
     }
 }
 
-// MARK:- UITableView
+// MARK: UITableView
 extension PRAlbumListVC
 {
     override func numberOfSections(in tableView: UITableView) -> Int
@@ -432,7 +431,6 @@ extension PRAlbumListVC
                 else { fatalError("expected asset collection") }
             
             let assests = PHAsset.fetchAssets(in: assetCollection, options: fetchOptions)
-            print(assests.count)
             
             let titleText = NSMutableAttributedString.init(string: "\(collection.localizedTitle!)\n\(assests.count)", attributes: [NSAttributedStringKey.paragraphStyle:paragraphStyle])
 
@@ -444,7 +442,6 @@ extension PRAlbumListVC
                 self.addThubNailImage(cell:cell , asset:asset)
             }
             
-            cell.selectionStyle = .none
             return cell
             
         case .userCollections:
@@ -453,7 +450,6 @@ extension PRAlbumListVC
             guard let assetCollection = collection as? PHAssetCollection
                 else { fatalError("expected asset collection") }
             let assests = PHAsset.fetchAssets(in: assetCollection, options: nil)
-            print(assests.count)
             if assests.count != 0
             {
                 let asset = assests[0]
@@ -478,12 +474,13 @@ extension PRAlbumListVC
         {return CGFloat.leastNormalMagnitude}
         return 50
     }
+   
     
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath)
     {
-        let destination = PRImageGridVC.init(collectionViewLayout: flowLayout)
-        destination.albumListVC = self
+        var  destination = PRImageGridVC.init(collectionViewLayout: flowLayout)
         
+
         switch Section(rawValue: indexPath.section)!
         {
         case .allPhotos:
@@ -493,9 +490,19 @@ extension PRAlbumListVC
         case .smartAlbums ,.userCollections:
             
             let collection: PHCollection
-            switch Section(rawValue: indexPath.section)! {
+
+            switch Section(rawValue: indexPath.section)!
+            {
             case .smartAlbums:
                 collection = smartAlbums.object(at: indexPath.row)
+                if let smartAlbumTitle = collection.localizedTitle
+                {
+                    if smartAlbumTitle == "Panoramas"
+                    {
+                        print(collection.localizedTitle!)
+                        destination = PRImageGridVC.init(collectionViewLayout: flowLayoutForPanoramas)
+                    }
+                }
             case .userCollections:
                 collection = userCollections.object(at: indexPath.row)
             default: return
@@ -509,12 +516,12 @@ extension PRAlbumListVC
             break
         }
         
-        
-        self.navigationController?.pushViewController(destination, animated: true)
+         destination.albumListVC = self
+         self.navigationController?.pushViewController(destination, animated: true)
     }
 }
 
-// MARK:- PHPhotoLibraryChangeObserver
+// MARK: PHPhotoLibraryChangeObserver
 extension PRAlbumListVC: PHPhotoLibraryChangeObserver {
     
     func photoLibraryDidChange(_ changeInstance: PHChange) {
@@ -543,89 +550,12 @@ extension PRAlbumListVC: PHPhotoLibraryChangeObserver {
     }
 }
 
-//MARK:- ImageCell
-class ImageCell:UICollectionViewCell
+//MARK:- Final object file structure
+struct Files
 {
-    var representedAssetIdentifier: String!
-    var thumbnailImage: UIImage! {
-        didSet {
-            imageViewObj.image = thumbnailImage
-        }
-    }
-    override init(frame: CGRect)
-    {
-        super.init(frame: frame)
-        
-        contentView.addSubview(imageViewObj)
-        contentView.addSubview(selectedImageView)
-        contentView.addSubview(videoBtn)
-        
-        NSLayoutConstraint.activate([
-            
-            imageViewObj.leftAnchor.constraint(equalTo: leftAnchor),
-            imageViewObj.rightAnchor.constraint(equalTo: rightAnchor),
-            imageViewObj.topAnchor.constraint(equalTo: topAnchor),
-            imageViewObj.bottomAnchor.constraint(equalTo: bottomAnchor)
-            
-            ])
-        
-        NSLayoutConstraint.activate([
-
-            selectedImageView.leftAnchor.constraint(equalTo: leftAnchor),
-            selectedImageView.rightAnchor.constraint(equalTo: rightAnchor),
-            selectedImageView.topAnchor.constraint(equalTo: topAnchor),
-            selectedImageView.bottomAnchor.constraint(equalTo: bottomAnchor)
-
-            ])
-        
-        NSLayoutConstraint.activate([
-            
-            videoBtn.leftAnchor.constraint(equalTo: leftAnchor),
-            videoBtn.rightAnchor.constraint(equalTo: rightAnchor),
-            videoBtn.topAnchor.constraint(equalTo: topAnchor),
-            videoBtn.bottomAnchor.constraint(equalTo: bottomAnchor)
-            
-            ])
-    }
-    
-    required init?(coder aDecoder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-    
-    override func prepareForReuse()
-    {
-        super.prepareForReuse()
-        imageViewObj.image = nil
-    }
-    
-    let imageViewObj:UIImageView = {
-        let imgVw = UIImageView()
-        imgVw.contentMode = .scaleAspectFill
-        imgVw.translatesAutoresizingMaskIntoConstraints = false
-        imgVw.clipsToBounds = true
-        return imgVw
-    }()
-    
-    let selectedImageView:UIButton = {
-        let imgVw = UIButton.init(type: .system)
-        imgVw.translatesAutoresizingMaskIntoConstraints = false
-        imgVw.backgroundColor = KImageSelectionColor
-        imgVw.alpha = 0
-        imgVw.isUserInteractionEnabled = false
-        return imgVw
-    }()
-    
-    let videoBtn:UIButton = {
-        let imgVw = UIButton.init(type: .system)
-        imgVw.translatesAutoresizingMaskIntoConstraints = false
-        imgVw.isUserInteractionEnabled = false
-        imgVw.contentMode = .scaleAspectFit
-        imgVw.setImage(#imageLiteral(resourceName: "play"), for: .normal)
-        imgVw.isHidden = true
-        imgVw.tintColor = .white
-        return imgVw
-    }()
-    
+    var  image:UIImage!
+    var  videoThumbNailImage:UIImage!
+    var  videoURl:URL!
 }
 
 //MARK:- AlbumCell

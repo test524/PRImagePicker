@@ -17,7 +17,7 @@ private extension UICollectionView {
         return allLayoutAttributes.map { $0.indexPath }
     }
 }
-
+// MARK:- PRImageGrid 
 class PRImageGridVC: UICollectionViewController
 {
     
@@ -39,10 +39,9 @@ class PRImageGridVC: UICollectionViewController
         
         collectionView?.register(ImageCell.self, forCellWithReuseIdentifier: reuseIdentifier)
         collectionView?.isPrefetchingEnabled  = true
-        print(fetchResult.count)
         
         //Done RightBarButton
-        let done =  UIBarButtonItem.init(barButtonSystemItem: .done, target: albumListVC, action: #selector(btnDoneAction))
+        let done =  UIBarButtonItem.init(barButtonSystemItem: .done, target: albumListVC, action: #selector(albumListVC.btnDoneAction))
         self.navigationItem.setRightBarButtonItems([done], animated: true)
         
     }
@@ -133,6 +132,7 @@ class PRImageGridVC: UICollectionViewController
     
     func multipleSelection(indexPath:IndexPath , cell:ImageCell)
     {
+       
         if albumListVC.maxFileSelection == KFilePHAssetSelectionArray.count
         {
             cell.selectedImageView.alpha = 0
@@ -143,6 +143,15 @@ class PRImageGridVC: UICollectionViewController
                 {
                     KFilePHAssetSelectionArray.remove(at: indexitem)
                 }
+            }
+            else
+            {
+                //Alert
+                let alertController = UIAlertController.init(title: "Alert", message:albumListVC.maxFileSelectionMessage, preferredStyle: .alert)
+                let action = UIAlertAction.init(title: "ok", style: .cancel, handler: nil)
+                alertController.addAction(action)
+                self.present(alertController, animated: true, completion: nil)
+                //
             }
         }
         else
@@ -193,13 +202,7 @@ class PRImageGridVC: UICollectionViewController
         previousPreheatRect = .zero
     }
     
-    //MARK:- Done button
-    @objc func btnDoneAction()
-    {
-        //let images = self.selectFiles()
-        //self.delegate?.selectFiles(images: images, videoUrls: nil)
-        //self.navigationController?.dismiss(animated: true, completion: nil)
-    }
+    
 
     fileprivate func updateCachedAssets() {
         // Update only if the view is visible.
@@ -260,7 +263,7 @@ class PRImageGridVC: UICollectionViewController
     
 }
 
-// MARK: PHPhotoLibraryChangeObserver
+// MARK:PHPhotoLibraryChangeObserver
 extension PRImageGridVC: PHPhotoLibraryChangeObserver {
     func photoLibraryDidChange(_ changeInstance: PHChange) {
         
@@ -302,4 +305,87 @@ extension PRImageGridVC: PHPhotoLibraryChangeObserver {
 }
 
 
-
+//MARK:- ImageCell 
+class ImageCell:UICollectionViewCell
+{
+    var representedAssetIdentifier: String!
+    var thumbnailImage: UIImage! {
+        didSet {
+            imageViewObj.image = thumbnailImage
+        }
+    }
+    override init(frame: CGRect)
+    {
+        super.init(frame: frame)
+        
+        contentView.addSubview(imageViewObj)
+        contentView.addSubview(selectedImageView)
+        contentView.addSubview(videoBtn)
+        
+        NSLayoutConstraint.activate([
+            
+            imageViewObj.leftAnchor.constraint(equalTo: leftAnchor),
+            imageViewObj.rightAnchor.constraint(equalTo: rightAnchor),
+            imageViewObj.topAnchor.constraint(equalTo: topAnchor),
+            imageViewObj.bottomAnchor.constraint(equalTo: bottomAnchor)
+            
+            ])
+        
+        NSLayoutConstraint.activate([
+            
+            selectedImageView.leftAnchor.constraint(equalTo: leftAnchor),
+            selectedImageView.rightAnchor.constraint(equalTo: rightAnchor),
+            selectedImageView.topAnchor.constraint(equalTo: topAnchor),
+            selectedImageView.bottomAnchor.constraint(equalTo: bottomAnchor)
+            
+            ])
+        
+        NSLayoutConstraint.activate([
+            
+            videoBtn.leftAnchor.constraint(equalTo: leftAnchor),
+            videoBtn.rightAnchor.constraint(equalTo: rightAnchor),
+            videoBtn.topAnchor.constraint(equalTo: topAnchor),
+            videoBtn.bottomAnchor.constraint(equalTo: bottomAnchor)
+            
+            ])
+    }
+    
+    required init?(coder aDecoder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    override func prepareForReuse()
+    {
+        super.prepareForReuse()
+        imageViewObj.image = nil
+    }
+    
+    let imageViewObj:UIImageView = {
+        let imgVw = UIImageView()
+        imgVw.contentMode = .scaleAspectFill
+        imgVw.translatesAutoresizingMaskIntoConstraints = false
+        imgVw.clipsToBounds = true
+        return imgVw
+    }()
+    
+    let selectedImageView:UIButton = {
+        let imgVw = UIButton.init(type: .system)
+        imgVw.translatesAutoresizingMaskIntoConstraints = false
+        imgVw.backgroundColor = KImageSelectionColor
+        imgVw.alpha = 0
+        imgVw.isUserInteractionEnabled = false
+        return imgVw
+    }()
+    
+    let videoBtn:UIButton = {
+        let imgVw = UIButton.init(type: .system)
+        imgVw.translatesAutoresizingMaskIntoConstraints = false
+        imgVw.isUserInteractionEnabled = false
+        imgVw.contentMode = .scaleAspectFit
+        imgVw.setImage(#imageLiteral(resourceName: "play"), for: .normal)
+        imgVw.isHidden = true
+        imgVw.tintColor = .white
+        return imgVw
+    }()
+    
+}
