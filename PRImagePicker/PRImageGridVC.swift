@@ -146,7 +146,7 @@ class PRImageGridVC: UICollectionViewController
             }
             else
             {
-                //Alert
+                //Max selection Alert
                 let alertController = UIAlertController.init(title: "Alert", message:albumListVC.maxFileSelectionMessage, preferredStyle: .alert)
                 let action = UIAlertAction.init(title: "ok", style: .cancel, handler: nil)
                 alertController.addAction(action)
@@ -171,15 +171,17 @@ class PRImageGridVC: UICollectionViewController
             }
             else
             {
-                if albumListVC.maxFileSelection != KFilePHAssetSelectionArray.count
-                {
-                    KFilePHAssetSelectionArray.append(asset)
-                }
+                KFilePHAssetSelectionArray.append(asset)
             }
+            //
             
-            //ToolBar
-            self.makeToolBar()
         }
+        
+        
+        
+        //ToolBar
+        self.makeToolBar()
+    
     }
     
     /*override func collectionView(_ collectionView: UICollectionView, didDeselectItemAt indexPath: IndexPath) {

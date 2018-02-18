@@ -81,6 +81,7 @@ class PRAlbumListVC: UITableViewController
         
         tableView.register(AlbumCell.self, forCellReuseIdentifier: CellIdentifier.allPhotos.rawValue)
         tableView.register(AlbumCell.self, forCellReuseIdentifier: CellIdentifier.collection.rawValue)
+        tableView.separatorStyle = .singleLine
         
         self.view.backgroundColor = .white
         self.navigationItem.title = "Albums"
@@ -91,7 +92,6 @@ class PRAlbumListVC: UITableViewController
         let barButtonDone = UIBarButtonItem.init(barButtonSystemItem: .done, target: self, action: #selector(btnDoneAction))
         self.navigationItem.rightBarButtonItem = barButtonDone
         
-        tableView.separatorStyle = .none
         fetchAllAlbumsCount()
         requestAlbumFileAccess()
 
@@ -424,7 +424,6 @@ extension PRAlbumListVC
             
         case .smartAlbums:
             
-            
             collection = smartAlbums.object(at: indexPath.row)
             
             guard let assetCollection = collection as? PHAssetCollection
@@ -579,7 +578,7 @@ class AlbumCell :UITableViewCell
             
             albumImageView.leftAnchor.constraint(equalTo: leftAnchor , constant:15),
             albumImageView.topAnchor.constraint(equalTo: topAnchor,constant:5),
-            albumImageView.bottomAnchor.constraint(equalTo: bottomAnchor),
+            albumImageView.bottomAnchor.constraint(equalTo: bottomAnchor , constant: -5),
             albumImageView.widthAnchor.constraint(equalToConstant: 100)
             
             ])

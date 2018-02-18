@@ -30,7 +30,7 @@ class ViewController: UIViewController , PRAlbumListVCDelegate
         albumListVC.maxFileSelection = 4
         albumListVC.fileType = .image
         albumListVC.fileSeletionType = .multiple
-        //albumListVC.maxFileSelectionMessage = "Test"
+        //albumListVC.maxFileSelectionMessage = "Max selection"
         self.present(navVC, animated: true, completion: nil)
     }
     
